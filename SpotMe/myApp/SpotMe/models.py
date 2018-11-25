@@ -100,15 +100,21 @@ class router(models.Model):
 class router_location_statistic(models.Model):
     location = models.ForeignKey(location, on_delete=models.CASCADE)
     router = models.ForeignKey(router, on_delete=models.CASCADE)
-    # statistic = models.FloatField() # avg, var, min, max
+    num = models.FloatField() # avg, var, min, max
+    avg = models.FloatField() # avg, var, min, max
+    var = models.FloatField() # avg, var, min, max
+    Max = models.FloatField() # avg, var, min, max
 
 class router_location_data(models.Model):
     location = models.ForeignKey(location, on_delete=models.CASCADE)
     router = models.ForeignKey(router, on_delete=models.CASCADE)
-    signal_strength = models.FloatField()
+    signal_strength = models.IntegerField()
+
+    class Meta:
+        unique_together = ('location', 'router', 'signal_strength')
 
     def __str__(self):
-        return self.location.name + self.router.SSID
+        return self.location.location_name + self.router.SSID
 
 class attendance(models.Model):
     student = models.ForeignKey(student, on_delete=models.CASCADE)

@@ -437,7 +437,7 @@ def ping(request):
 @csrf_exempt
 def get_location(request):
     context = {'status': False}
-    pass
+    return JsonResponse(context)
 
 @csrf_exempt
 def location_data(request):
@@ -445,13 +445,22 @@ def location_data(request):
     context = {'status': False}
     location_id = request.POST['location']
     data = request.POST['wifi-data']
-    print(data)
-    # icode = request.body.decode('utf-8')
-    print(request.POST['wifi-data']['ssid'])
-    # print(json.loads(icode))
-    # for d in data:
-    #     print(d+'}')
-    #     print('data = ', json.loads(d+'}'))
-    # print(data)
+    data = json.loads(data)
+    location_obj = get_object_or_404(location, location_id=location_id)
+    for d in data:
+        try:
+            router_obj = get_object_or_404(router, BSSID=d['bssid'])
+        except:
+            router_obj = router(BSSID=d['bssid'], SSID=d['ssid'])
+            router_obj.save()
+            print('router added.')
+        try:
+            router_location_data_obj = get_object_or_404(router_location_data, router=router_obj, location=location_obj, signal_strength=d['signal'])
+        except:
+            router_location_data_obj = router_location_data(router=router_obj, location=location_obj, signal_strength=d['signal'])
+            router_location_data_obj.save()
+            print('data added.')
+        print(location_obj.location_id, location_obj.location_name, router_obj.SSID, router_obj.BSSID, d['signal'])
+
     context = {'status': True}
     return JsonResponse(context)
