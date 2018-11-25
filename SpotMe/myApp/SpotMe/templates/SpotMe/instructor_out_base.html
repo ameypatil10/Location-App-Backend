@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load static from staticfiles %}
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="{% static 'SpotMe/instructor_out_base.css' %}">
+    <title>SpotMe</title>
+</head>
+<body>
+    <nav class="navbar navbar-inverse">
+        <div class="container-fluid">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              <a class="navbar-brand" href="{% url 'SpotMe:index' %}">SpotMe for Instructor</a>
+            </div>
+            <div class="collapse navbar-collapse" id="myNavbar">
+              <ul class="nav navbar-nav navbar-right">
+                <li><a href="{% url 'SpotMe:instructor_register' %}"><span class="glyphicon glyphicon-user"></span> Sign Up </a></li>
+                <li><a href="{% url 'SpotMe:instructor_login' %}"><span class="glyphicon glyphicon-log-in"></span> Login </a></li>
+              </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        {% block content %}
+        {% endblock %}
+        <br>
+
+    </div>
+
+    <footer class="navbar-fixed-bottom" >
+        <p><a href="/admin"><div class="text-center">Admin Login</div></a></p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,33 @@
+{% extends 'SpotMe/instructor_in_base.html' %}
+
+{% block content %}
+
+{%if course_session %}
+    <h1> {{ course_session }} </h1>
+{% endif %}
+
+{% if course_lectures %}
+    <ul>
+        {% for course_lecture in course_lectures %}
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    <a href="{% url 'SpotMe:instructor_lecture_page' course_lecture.lecture_id %}">
+                        {{ course_lecture }}
+                    </a>
+                </div>
+                <div class="panel-body">
+                    Lecture Information
+                </div>
+            </div>
+        {% endfor %}
+    </ul>
+{% endif %}
+<div class="panel panel-info">
+        <div class="panel-heading">
+            <a href="{% url 'SpotMe:instructor_add_lecture' course_session.pk %}">
+                Create New Lecture.
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

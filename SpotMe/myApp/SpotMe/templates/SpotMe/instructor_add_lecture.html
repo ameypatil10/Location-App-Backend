@@ -1,0 +1,36 @@
+{% extends 'SpotMe/instructor_in_base.html' %}
+
+{% block content %}
+
+<h1>
+    Add Lecture!
+</h1>
+
+<div class="container navbar">
+    <form role="form" action="" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <fieldset>
+            <p>Lecture Title</p>
+            <input type="text" placeholder="Lecture Title" name="lecture_title" />
+            {{ form.errors.lecture_title }}
+            <p>Location</p>
+            <select name="location_id">
+                {% if location_list %}
+                    {% for location in location_list %}
+                        <option value="{{ location.location_id }}">{{ location.location_name }}</option>
+                    {% endfor %}
+                {% endif %}
+            </select>
+            {{ form.errors.location_id }}
+            <p>Start Time</p>
+            <input type="datetime" name="start_time" />
+            {{ form.errors.start_time }}
+            <p>End Time</p>
+            <input type="datetime" name="end_time" />
+            {{ form.errors.end_time }}
+        </fieldset>
+        <button type="submit">Submit</button>
+    </form>
+</div>
+
+{% endblock %}

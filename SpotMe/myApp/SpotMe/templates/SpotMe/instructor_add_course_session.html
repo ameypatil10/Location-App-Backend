@@ -1,0 +1,48 @@
+{% extends 'SpotMe/instructor_in_base.html' %}
+
+{% block content %}
+
+<h1>
+    Add Course Session!
+</h1>
+
+<div class="container navbar">
+    <form role="form" action="" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <fieldset>
+            <p>Course Name</p>
+            <select name="course_id">
+                {% if course_list %}
+                    {% for course in course_list %}
+                        <option value="{{ course.course_id }}">{{ course.course_name }}</option>
+                    {% endfor %}
+                {% endif %}
+            </select>
+            {{ form.errors.course_id }}
+            <p>Semester</p>
+            <select name="semester">
+                {% if semester_list %}
+                    {% for semester_key,semester_value in semester_list %}
+                        <option value="{{ semester_key }}">{{ semester_value }}</option>
+                    {% endfor %}
+                {% endif %}
+            </select>
+            {{ form.errors.semester }}
+            <p>Year</p>
+            <select name="year">
+                {% if year_list %}
+                    {% for year_key, year_value in year_list %}
+                        <option value="{{ year_key }}">{{ year_value }}</option>
+                    {% endfor %}
+                {% endif %}
+            </select>
+            {{ form.errors.year }}
+            <p>Course Session Information</p>
+            <input type="text" placeholder="Last Name" name="course_session_info" />
+            {{ form.errors.last_name }}
+        </fieldset>
+        <button type="submit">Submit</button>
+    </form>
+</div>
+
+{% endblock %}

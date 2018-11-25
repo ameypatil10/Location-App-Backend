@@ -1,0 +1,75 @@
+2018-10-12 00:03:35.470 IST [15820] LOG:  listening on IPv6 address "::1", port 5060
+2018-10-12 00:03:35.470 IST [15820] LOG:  listening on IPv4 address "127.0.0.1", port 5060
+2018-10-12 00:03:35.483 IST [15820] LOG:  listening on Unix socket "/users/ug16/ameypatil/postgresql/.s.PGSQL.5060"
+2018-10-12 00:03:35.539 IST [15821] LOG:  database system was interrupted; last known up at 2018-10-11 16:52:59 IST
+2018-10-12 00:03:38.034 IST [15821] LOG:  database system was not properly shut down; automatic recovery in progress
+2018-10-12 00:03:38.052 IST [15821] LOG:  redo starts at 0/35DDDC8
+2018-10-12 00:03:38.053 IST [15821] LOG:  invalid record length at 0/35DDEA8: wanted 24, got 0
+2018-10-12 00:03:38.053 IST [15821] LOG:  redo done at 0/35DDE70
+2018-10-12 00:03:38.089 IST [15820] LOG:  database system is ready to accept connections
+2018-10-12 00:04:38.156 IST [15820] LOG:  could not open file "postmaster.pid": No such file or directory
+2018-10-12 00:04:38.156 IST [15820] LOG:  performing immediate shutdown because data directory lock file is invalid
+2018-10-12 00:04:38.156 IST [15820] LOG:  received immediate shutdown request
+2018-10-12 00:04:38.157 IST [15820] LOG:  could not open file "postmaster.pid": No such file or directory
+2018-10-12 00:04:38.157 IST [15826] WARNING:  terminating connection because of crash of another server process
+2018-10-12 00:04:38.157 IST [15826] DETAIL:  The postmaster has commanded this server process to roll back the current transaction and exit, because another server process exited abnormally and possibly corrupted shared memory.
+2018-10-12 00:04:38.157 IST [15826] HINT:  In a moment you should be able to reconnect to the database and repeat your command.
+2018-10-12 00:04:38.178 IST [15820] LOG:  database system is shut down
+2018-10-12 00:10:04.290 IST [15898] LOG:  listening on IPv6 address "::1", port 5060
+2018-10-12 00:10:04.290 IST [15898] LOG:  listening on IPv4 address "127.0.0.1", port 5060
+2018-10-12 00:10:04.301 IST [15898] LOG:  listening on Unix socket "/users/ug16/ameypatil/postgresql/.s.PGSQL.5060"
+2018-10-12 00:10:04.345 IST [15899] LOG:  database system was interrupted; last known up at 2018-10-12 00:03:38 IST
+2018-10-12 00:10:06.932 IST [15899] LOG:  database system was not properly shut down; automatic recovery in progress
+2018-10-12 00:10:06.944 IST [15899] LOG:  redo starts at 0/35DDF18
+2018-10-12 00:10:06.945 IST [15899] LOG:  invalid record length at 0/35DDF50: wanted 24, got 0
+2018-10-12 00:10:06.945 IST [15899] LOG:  redo done at 0/35DDF18
+2018-10-12 00:10:06.982 IST [15898] LOG:  database system is ready to accept connections
+2018-10-12 00:12:16.137 IST [15925] ERROR:  syntax error at or near "exit" at character 1
+2018-10-12 00:12:16.137 IST [15925] STATEMENT:  exit
+	;
+2018-10-12 01:14:06.615 IST [30624] LOG:  listening on IPv6 address "::1", port 5060
+2018-10-12 01:14:06.615 IST [30624] LOG:  listening on IPv4 address "127.0.0.1", port 5060
+2018-10-12 01:14:06.630 IST [30624] LOG:  listening on Unix socket "/users/ug16/ameypatil/postgresql/.s.PGSQL.5060"
+2018-10-12 01:14:06.670 IST [30625] LOG:  database system was interrupted; last known up at 2018-10-12 00:10:06 IST
+2018-10-12 01:14:09.673 IST [30625] LOG:  database system was not properly shut down; automatic recovery in progress
+2018-10-12 01:14:09.693 IST [30625] LOG:  redo starts at 0/35DDFC0
+2018-10-12 01:14:09.694 IST [30625] LOG:  invalid record length at 0/35DDFF8: wanted 24, got 0
+2018-10-12 01:14:09.694 IST [30625] LOG:  redo done at 0/35DDFC0
+2018-10-12 01:14:09.735 IST [30624] LOG:  database system is ready to accept connections
+30624 instead of 15898
+2018-10-12 01:14:10.672 IST [15898] LOG:  performing immediate shutdown because data directory lock file is invalid
+2018-10-12 01:14:10.672 IST [15898] LOG:  received immediate shutdown request
+2018-10-12 01:14:10.675 IST [15904] WARNING:  terminating connection because of crash of another server process
+2018-10-12 01:14:10.675 IST [15904] DETAIL:  The postmaster has commanded this server process to roll back the current transaction and exit, because another server process exited abnormally and possibly corrupted shared memory.
+2018-10-12 01:14:10.675 IST [15904] HINT:  In a moment you should be able to reconnect to the database and repeat your command.
+2018-10-12 01:14:10.677 IST [20932] WARNING:  terminating connection because of crash of another server process
+2018-10-12 01:14:10.677 IST [20932] DETAIL:  The postmaster has commanded this server process to roll back the current transaction and exit, because another server process exited abnormally and possibly corrupted shared memory.
+2018-10-12 01:14:10.677 IST [20932] HINT:  In a moment you should be able to reconnect to the database and repeat your command.
+2018-10-12 01:14:10.708 IST [15898] LOG:  database system is shut down
+2018-10-12 01:15:09.855 IST [30624] LOG:  could not open file "postmaster.pid": No such file or directory
+2018-10-12 01:15:09.855 IST [30624] LOG:  performing immediate shutdown because data directory lock file is invalid
+2018-10-12 01:15:09.855 IST [30624] LOG:  received immediate shutdown request
+2018-10-12 01:15:09.855 IST [30624] LOG:  could not open file "postmaster.pid": No such file or directory
+2018-10-12 01:15:09.855 IST [30648] WARNING:  terminating connection because of crash of another server process
+2018-10-12 01:15:09.855 IST [30648] DETAIL:  The postmaster has commanded this server process to roll back the current transaction and exit, because another server process exited abnormally and possibly corrupted shared memory.
+2018-10-12 01:15:09.855 IST [30648] HINT:  In a moment you should be able to reconnect to the database and repeat your command.
+2018-10-12 01:15:09.857 IST [30654] WARNING:  terminating connection because of crash of another server process
+2018-10-12 01:15:09.857 IST [30654] DETAIL:  The postmaster has commanded this server process to roll back the current transaction and exit, because another server process exited abnormally and possibly corrupted shared memory.
+2018-10-12 01:15:09.857 IST [30654] HINT:  In a moment you should be able to reconnect to the database and repeat your command.
+2018-10-12 01:15:09.859 IST [30629] WARNING:  terminating connection because of crash of another server process
+2018-10-12 01:15:09.859 IST [30629] DETAIL:  The postmaster has commanded this server process to roll back the current transaction and exit, because another server process exited abnormally and possibly corrupted shared memory.
+2018-10-12 01:15:09.859 IST [30629] HINT:  In a moment you should be able to reconnect to the database and repeat your command.
+2018-10-12 01:15:09.894 IST [30624] LOG:  database system is shut down
+2018-10-12 01:18:05.170 IST [30708] LOG:  listening on IPv6 address "::1", port 5060
+2018-10-12 01:18:05.170 IST [30708] LOG:  listening on IPv4 address "127.0.0.1", port 5060
+2018-10-12 01:18:05.180 IST [30708] LOG:  listening on Unix socket "/users/ug16/ameypatil/postgresql/.s.PGSQL.5060"
+2018-10-12 01:18:05.231 IST [30709] LOG:  database system was interrupted; last known up at 2018-10-12 01:14:09 IST
+2018-10-12 01:18:07.961 IST [30709] LOG:  database system was not properly shut down; automatic recovery in progress
+2018-10-12 01:18:07.981 IST [30709] LOG:  redo starts at 0/35DE080
+2018-10-12 01:18:07.982 IST [30709] LOG:  invalid record length at 0/35DE0B8: wanted 24, got 0
+2018-10-12 01:18:07.982 IST [30709] LOG:  redo done at 0/35DE080
+2018-10-12 01:18:08.020 IST [30708] LOG:  database system is ready to accept connections
+2018-10-12 01:18:21.166 IST [30727] FATAL:  lock file "postmaster.pid" already exists
+2018-10-12 01:18:21.166 IST [30727] HINT:  Is another postmaster (PID 30708) running in data directory "/users/ug16/ameypatil/postgresql/dbis"?
+2018-10-12 01:25:55.796 IST [30843] FATAL:  lock file "postmaster.pid" already exists
+2018-10-12 01:25:55.796 IST [30843] HINT:  Is another postmaster (PID 30708) running in data directory "/users/ug16/ameypatil/postgresql/dbis"?

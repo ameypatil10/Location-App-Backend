@@ -1,0 +1,35 @@
+{% extends 'SpotMe/instructor_out_base.html' %}
+{% block content %}
+
+<div class="container">
+    <form role="form" action="" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <fieldset>
+            <p>First Name</p>
+            <input type="text" placeholder="First Name" name="first_name" />
+            {{ form.errors.first_name }}
+            <p>Last Name</p>
+            <input type="text" placeholder="Last Name" name="last_name" />
+            {{ form.errors.last_name }}
+            <p>Username</p>
+            <input type="text" placeholder="Username" name="username" />
+            {{ form.errors.username }}
+            <p>Password</p>
+            <input type="password" placeholder="Password" name="password" />
+            {{ form.errors.password }}
+            <p>Confirm Password</p>
+            <input type="password" placeholder="Repeat Password" name="confirm_password" />
+            {{ form.errors.confirm_password }}
+            <p>Email ID</p>
+            <input type="email" placeholder="Email ID" name="email" />
+            {{ form.errors.email }}
+            <p>Upload your photo</p>
+            <input type="file" name="profile_pic" />
+            {{ form.errors.profile_pic }}
+        </fieldset>
+        <button type="submit">Register</button>
+        <p class="message"> Already Registered? <a href="{% url 'SpotMe:instructor_login' %}">Log In to your Account</a></p>
+    </form>
+</div>
+
+{% endblock %}
