@@ -9,7 +9,7 @@ from django.views.decorators.csrf import csrf_exempt
 import datetime
 from django.utils.crypto import get_random_string
 from django.db import connection
-
+import json
 
 def dictfetchall(cursor):
     #"Return all rows from a cursor as a dict"
@@ -58,7 +58,7 @@ def instructor_lecture_page_context(instructor, lecture_id):
                 context['lecture'] = lecture_obj
     return context
 
-############################################################ VIEWS ####################################################################
+############################################################ Instructor VIEWS ####################################################################
 def index(request):
     if request.user.is_authenticated:
         instructor_obj = get_object_or_404(instructor, user=request.user)
@@ -194,6 +194,8 @@ def instructor_lecture_page(request, lecture_id):
         context = instructor_lecture_page_context(instructor_obj, lecture_id)
         return render(request, 'SpotMe/instructor_lecture_page.html', context)
 
+###################################################### Student Views #################################################################################
+
 @csrf_exempt
 def student_login(request):
     context = {'status': False}
@@ -239,7 +241,10 @@ def student_register(request):
     if(request.method == 'POST'):
         userid = request.POST['userid']
         password = request.POST['password']
-        user = User(username = userid)
+        first_name = request.POST['first_name']
+        last_name = request.POST['last_name']
+        email = request.POST['email']
+        user = User(username = userid, first_name=first_name, last_name=last_name, email=email)
         user.set_password(password)
         user.save()
         student_obj = student.create(user=user)
@@ -252,59 +257,7 @@ def student_register(request):
                 context['status'] = True
                 return JsonResponse(context)
         context['status'] = False
-
-    # form = RegisterForm(request.POST or None)
-    # context = {'form': form}
-    # if form.is_valid():
-    #     form.save()
-    #     user = form.save(commit=False)
-    #     username = form.cleaned_data['username']
-    #     password = form.cleaned_data['password']
-    #     user.set_password(password)
-    #     user.first_name = form.cleaned_data['first_name']
-    #     user.last_name = form.cleaned_data['last_name']
-    #     user.email = form.cleaned_data['email']
-    #     user.save()
-    #     instructor_obj = instructor.create(user=user)
-    #     instructor_obj.profile_pic = form.cleaned_data['profile_pic']
-    #     instructor_obj.save()
-    #     user = authenticate(username=username, password=password)
-    #     if user is not None:
-    #         if user.is_active:
-    #             login(request, user)
-    #             return render(request, 'SpotMe/instructor_home.html', instructor_home_context(instructor_obj))
-
-
-
-        
         return JsonResponse(context)
-
-# def course_detail(request):
-#     if request.method == "GET":
-#         username = request.GET['username']
-#         password = request.GET['password']
-#         user = authenticate(username=username, password=password)
-#         context = {'status': 'false'}
-#         if user is not None:
-#             if user.is_active:
-#                 login(request, user)
-#                 student_obj = get_object_or_404(student, user=request.user)
-#                 context['username'] = student_obj.user.username
-#                 return JsonResponse(context)
-#             else:
-#                 context['error_message'] = 'Your account has been disabled'
-#                 return JsonResponse(context)
-#         else:
-#             context['error_message'] = 'Invalid login credentials'
-#             return JsonResponse(context)
-#     return JsonResponse({'FUN': 'Bitches have fun!'})
-
-
-def lecture_detail(request):
-    pass
-
-def get_location(request, scan_data):
-    pass
 
 @csrf_exempt
 def student_home(request):
@@ -367,7 +320,6 @@ def student_course_details(request):
             context['userid'] = user.username
             return JsonResponse(context)
     return JsonResponse(context)
-
 
 @csrf_exempt
 def student_register_course(request):
@@ -436,17 +388,17 @@ def add_location(request):
         return JsonResponse(context)
 
 @csrf_exempt
-def get_location(request):
+def list_location(request):
     context = {'status': False}
     if not request.user or not request.user.is_authenticated:
         context['error_msg'] = 'User not logged in'
         return JsonResponse(context)
 
     with connection.cursor() as cursor:
-        cursor.execute("SELECT * FROM SPotMe_location")
+        cursor.execute("SELECT * FROM SpotMe_location")
         row = dictfetchall(cursor)
         context['data'] = row
-        context['status'] = True;
+        context['status'] = True
         return JsonResponse(context)
 
 @csrf_exempt
@@ -478,7 +430,28 @@ def ping(request):
         context['error_msg'] = 'User not logged in'
         return JsonResponse(context) 
 
-    context['data'] = request.POST;
-    context['status'] = True;
+    context['data'] = request.POST
+    context['status'] = True
     return JsonResponse(context)
 
+@csrf_exempt
+def get_location(request):
+    context = {'status': False}
+    pass
+
+@csrf_exempt
+def location_data(request):
+    # get location data(json) from user and save to the database.
+    context = {'status': False}
+    location_id = request.POST['location']
+    data = request.POST['wifi-data']
+    print(data)
+    # icode = request.body.decode('utf-8')
+    print(request.POST['wifi-data']['ssid'])
+    # print(json.loads(icode))
+    # for d in data:
+    #     print(d+'}')
+    #     print('data = ', json.loads(d+'}'))
+    # print(data)
+    context = {'status': True}
+    return JsonResponse(context)

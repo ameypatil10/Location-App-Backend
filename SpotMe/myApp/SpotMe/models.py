@@ -22,6 +22,12 @@ class student(models.Model):
     def __str__(self):
         return self.user.username
 
+class collaborator(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, default=None)
+
+    def __str__(self):
+        return self.user.username
+
 class instructor(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, default=None)
     profile_pic = models.FileField(default=None, null=True)

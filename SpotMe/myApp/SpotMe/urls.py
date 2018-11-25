@@ -41,13 +41,12 @@ urlpatterns = [
     url(r'^scourse_register/$', views.student_register_course, name='student_register_course'),
     url(r'^scourse_details/$', views.student_course_details, name='student_course_details'),
     url(r'^sprofile/$', views.student_profile, name='student_profile'),
+    url(r'^get_location/$', views.get_location, name='get_location'),
 
     # General URLS 
     url(r'^add_location/$', views.add_location, name='add_location'),
-    url(r'^get_location/$', views.get_location, name='get_locations'),
+    url(r'^list_location/$', views.list_location, name='list_location'),
     url(r'^ping/$', views.ping, name='ping'),
-
-
-
-
+    url(r'^location_data/$', views.location_data, name='location_data'),
+    
 ]
