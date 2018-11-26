@@ -11,6 +11,8 @@ from django.utils.crypto import get_random_string
 from django.db import connection
 import json
 
+epsilon = 1e-4
+
 def dictfetchall(cursor):
     #"Return all rows from a cursor as a dict"
     columns = [col[0] for col in cursor.description]
@@ -495,8 +497,9 @@ def ping(request):
             cursor.execute("""select * from SpotMe_attendance WHERE
                 lecture_id = %s AND student_id = %s""", [row[0]['lecture_id'] , student_obj.id])
             attendance_data = dictfetchall(cursor)
-
-            student_location = get_location(request)
+            data=request.POST['wifi-data']
+            data = json.loads(data)
+            student_location = get_location(data)
             # print(attendance_data[0]['id'])
             # print(json.dumps(student_location))
             new_tracking_data = tracking_data(attendance_id = attendance_data[0]['id'], location=student_location)
@@ -510,12 +513,46 @@ def ping(request):
 
     return JsonResponse(context)
 
-@csrf_exempt
-def get_location(request):
+def get_prob(loc, data):
+    prob = 0
+    wts = epsilon
+    for (router_obj, signal) in data:
+        try:
+            stat = get_object_or_404(router_location_statistic, location=loc, router=router_obj)
+            p = exp(-(stat.avg - signal)**2/(stat.var+epsilon))
+            wt = exp(-(stat.Max - stat.avg)**2/(stat.var+epsilon))
+            prob += p*wt
+            wts += wt
+        except:
+            pass
+    return (loc, prob/wts)
+
+def get_location(data):
     context = {'status': False}
-    data = request.POST['wifi-data']
     context['location'] = get_object_or_404(location, location_id=1)
-    return context['location']
+    id_signal_data = []
+    for d in data:
+        try:
+            r = get_object_or_404(router, BSSID=d['bssid'])
+            id_signal_data.append((r, d['signal']))
+        except:
+            pass
+    print(id_signal_data)
+    locations = location.objects.all()
+    probs = []
+    max_prob = 0
+    out_loc = None
+    for l in locations:
+        p = get_prob(l, id_signal_data)
+        print('loc-prob', p)
+        if p[1] > max_prob:
+            max_prob = p[1]
+            out_loc = p[0]
+    if out_loc:
+        context['ststus'] = True
+        context['location'] = out_loc
+        return context
+    return context
 
 @csrf_exempt
 def location_data(request):
