@@ -491,29 +491,7 @@ def ping(request):
             context['data']['curr_lecture'] = row[0]
             print(row[0]['lecture_id'])
 
-<<<<<<< HEAD
             student_location = get_location(request)
-=======
-            # MARK ATTENDANCE....
-            cursor.execute("""select * from SpotMe_attendance WHERE
-                lecture_id = %s AND student_id = %s""", [row[0]['lecture_id'] , student_obj.id])
-            attendance_data = dictfetchall(cursor)
-            # print(attendance_data)
-            if(not(len(attendance_data) == 1)):
-                lecture_id = row[0]['lecture_id']
-                new_attendance = attendance(lecture_id = lecture_id, student_id =  student_obj.id)
-                new_attendance.save()
-            cursor.execute("""select * from SpotMe_attendance WHERE
-                lecture_id = %s AND student_id = %s""", [row[0]['lecture_id'] , student_obj.id])
-            attendance_data = dictfetchall(cursor)
-            data=request.POST['wifi-data']
-            data = json.loads(data)
-            student_location = get_location(data)
-            # print(attendance_data[0]['id'])
-            # print(json.dumps(student_location))
-            new_tracking_data = tracking_data(attendance_id = attendance_data[0]['id'], location=student_location)
-            new_tracking_data.save()
->>>>>>> b0916a7eb9880b9fe0ac8529bb232961e8983919
 
             if(student_location == row[0]['lecture_location_id']):
             # MARK ATTENDANCE....
