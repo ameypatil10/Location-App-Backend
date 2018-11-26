@@ -496,7 +496,7 @@ def ping(request):
 
             student_location = get_location(data)
 
-            if((student_location == row[0]['lecture_location_id']) or True):
+            if((student_location == row[0]['lecture_location_id'])):
             # MARK ATTENDANCE....
                 cursor.execute("""select * from SpotMe_attendance WHERE
                     lecture_id = %s AND student_id = %s""", [row[0]['lecture_id'] , student_obj.id])
