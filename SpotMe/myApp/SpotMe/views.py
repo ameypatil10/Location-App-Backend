@@ -10,6 +10,7 @@ import datetime
 from django.utils.crypto import get_random_string
 from django.db import connection
 import json
+import math
 
 epsilon = 1e-4
 
@@ -55,16 +56,15 @@ def instructor_lecture_page_context(instructor, lecture_id):
         if instructor.user.is_authenticated:
             context['instructor'] = instructor
             lecture_obj = get_object_or_404(lecture, pk=lecture_id)
+            print(lecture_obj)
             if lecture_obj is not None:
                 context['course_session'] = lecture.course_session
                 context['lecture'] = lecture_obj
                 takes_objs = takes.objects.filter(course_session=lecture_obj.course_session)
+                print(takes_objs)
                 context['students'] = list(map(lambda x: x.student, takes_objs))
                 context['attendances'] = attendance.objects.filter(lecture=lecture_obj)
     return context
-
-def get_location1():
-    pass
 
 ############################################################ Instructor VIEWS ####################################################################
 def index(request):
@@ -442,17 +442,17 @@ def Wifi_data(request):
 @csrf_exempt
 def ping(request):
     context = {'status': False, 'logged_in': True}
+    data = request.POST['wifi-data']
+    data = json.loads(data)
     if not request.user or not request.user.is_authenticated:
         context['error_msg'] = 'User not logged in'
         context['logged_in'] = False
         return JsonResponse(context) 
 
     user = request.user
-    print(user)
     student_obj = get_object_or_404(student, user=user) 
-    print(student_obj.id)
-    # curr_time = datetime.datetime.now()
-
+    student_location = get_location(data)
+    print('student_location - ', student_location)
     with connection.cursor() as cursor:
         cursor.execute("""SELECT SpotMe_student.*, SpotMe_takes.*, SpotMe_lecture.* 
             FROM SpotMe_takes, SpotMe_student, 
@@ -483,15 +483,14 @@ def ping(request):
             AND SpotMe_student.id = %s
             AND SpotMe_lecture.start_time < DATETIME('NOW')
             AND SpotMe_lecture.end_time > DATETIME('NOW')""", [student_obj.id])
-        # cursor.execute("select DATETIME('now')")
         row = dictfetchall(cursor)
         if(len(row) == 0):
             context['data']['curr_lecture'] = "No Lecture Found"
         else:
             context['data']['curr_lecture'] = row[0]
-            print(row[0]['lecture_id'])
+            # print(row[0]['lecture_id'])
 
-            student_location = get_location(request)
+            student_location = get_location(data)
 
             if(student_location == row[0]['lecture_location_id']):
             # MARK ATTENDANCE....
@@ -526,8 +525,11 @@ def get_prob(loc, data):
     for (router_obj, signal) in data:
         try:
             stat = get_object_or_404(router_location_statistic, location=loc, router=router_obj)
-            p = exp(-(stat.avg - signal)**2/(stat.var+epsilon))
-            wt = exp(-(stat.Max - stat.avg)**2/(stat.var+epsilon))
+            avg = stat.avg
+            Max = stat.Max
+            var = stat.var
+            p = math.exp(-(avg - signal)**2/(var+epsilon))
+            wt = math.exp(-(Max - stat.avg)**2/(var+epsilon))
             prob += p*wt
             wts += wt
         except:
@@ -535,8 +537,7 @@ def get_prob(loc, data):
     return (loc, prob/wts)
 
 def get_location(data):
-    context = {'status': False}
-    context['location'] = get_object_or_404(location, location_id=1)
+    context = {'status': False, 'location': None}
     id_signal_data = []
     for d in data:
         try:
@@ -544,20 +545,21 @@ def get_location(data):
             id_signal_data.append((r, d['signal']))
         except:
             pass
-    print(id_signal_data)
     locations = location.objects.all()
     probs = []
     max_prob = 0
     out_loc = None
     for l in locations:
         p = get_prob(l, id_signal_data)
-        print('loc-prob', p)
+        print(p)
+        probs.append(p)
         if p[1] > max_prob:
             max_prob = p[1]
             out_loc = p[0]
-    if out_loc:
-        context['ststus'] = True
+    if out_loc and max_prob > 0.01:
+        context['status'] = True
         context['location'] = out_loc
+        context['loc_prob'] = max_prob
         return context
     return context
 
