@@ -460,7 +460,23 @@ def location_data(request):
             router_location_data_obj = router_location_data(router=router_obj, location=location_obj, signal_strength=d['signal'])
             router_location_data_obj.save()
             print('data added.')
+        try:
+            router_location_statistic_obj = get_object_or_404(router_location_statistic, location=location_obj, router=router_obj)
+        except:
+            router_location_statistic_obj = router_location_statistic(location=location_obj, router=router_obj)
+            router_location_statistic_obj.save()
+        avg_old = router_location_statistic_obj.avg
+        var_old = router_location_statistic_obj.var
+        num_old = 1.0*router_location_statistic_obj.num
+        x = d['signal']
+        num = num_old + 1
+        avg = (avg_old*num_old + x)/num
+        var = num_old*(var_old + (((x-avg_old)**2)/num) )/num
+        router_location_statistic_obj.Max = max(router_location_statistic_obj.Max, x)
+        router_location_statistic_obj.num = num
+        router_location_statistic_obj.avg = avg
+        router_location_statistic_obj.var = var
+        router_location_statistic_obj.save()
         print(location_obj.location_id, location_obj.location_name, router_obj.SSID, router_obj.BSSID, d['signal'])
-
-    context = {'status': True}
+        context = {'status': True}
     return JsonResponse(context)
