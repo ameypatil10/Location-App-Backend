@@ -6,6 +6,9 @@
     Add Lecture!
 </h1>
 
+{{ form.media }}
+{% load i18n %}
+
 <div class="container navbar">
     <form role="form" action="" method="post" enctype="multipart/form-data">
         {% csrf_token %}
@@ -22,6 +25,7 @@
                 {% endif %}
             </select>
             {{ form.errors.location_id }}
+
             <p>Start Time</p>
             <input type="datetime" name="start_time" />
             {{ form.errors.start_time }}
