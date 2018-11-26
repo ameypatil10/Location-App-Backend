@@ -11,6 +11,8 @@ from django.utils.crypto import get_random_string
 from django.db import connection
 import json
 
+epsilon = 1e-4
+
 def dictfetchall(cursor):
     #"Return all rows from a cursor as a dict"
     columns = [col[0] for col in cursor.description]
@@ -48,7 +50,7 @@ def instructor_course_page_context(instructor, course_session_id):
     return context
 
 def instructor_lecture_page_context(instructor, lecture_id):
-    context = {'instructor': None, 'course_session': None, 'lecture': None}
+    context = {'instructor': None, 'course_session': None, 'students': None, 'lecture': None}
     if instructor is not None:
         if instructor.user.is_authenticated:
             context['instructor'] = instructor
@@ -56,7 +58,13 @@ def instructor_lecture_page_context(instructor, lecture_id):
             if lecture_obj is not None:
                 context['course_session'] = lecture.course_session
                 context['lecture'] = lecture_obj
+                takes_objs = takes.objects.filter(course_session=lecture_obj.course_session)
+                context['students'] = list(map(lambda x: x.student, takes_objs))
+                context['attendances'] = attendance.objects.filter(lecture=lecture_obj)
     return context
+
+def get_location1():
+    pass
 
 ############################################################ Instructor VIEWS ####################################################################
 def index(request):
@@ -169,11 +177,12 @@ def instructor_add_lecture(request, course_session_id):
         if form.is_valid():
             location_id = form.cleaned_data['location_id']
             lecture_title = form.cleaned_data['lecture_title']
+            lecture_date = form.cleaned_data['lecture_date']
             start_time = form.cleaned_data['start_time']
             end_time = form.cleaned_data['end_time']
             location_obj = get_object_or_404(location, location_id=location_id)
             lecture_obj = lecture(lecture_location=location_obj, course_session=course_session_obj, 
-            lecture_title=lecture_title, start_time=start_time, end_time=end_time)
+            lecture_title=lecture_title, lecture_date=lecture_date, start_time=start_time, end_time=end_time)
             lecture_obj.save()
             return render(request, 'SpotMe/instructor_course_page.html', instructor_course_page_context(instructor_obj, course_session_id))
         return render(request, 'SpotMe/instructor_add_lecture.html', context)
@@ -193,6 +202,7 @@ def instructor_lecture_page(request, lecture_id):
         instructor_obj = get_object_or_404(instructor, user=request.user)
         context = instructor_lecture_page_context(instructor_obj, lecture_id)
         return render(request, 'SpotMe/instructor_lecture_page.html', context)
+
 
 ###################################################### Student Views #################################################################################
 
@@ -439,7 +449,7 @@ def ping(request):
 
     user = request.user
     print(user)
-    student_obj = student.objects.get(user=user) 
+    student_obj = get_object_or_404(student, user=user) 
     print(student_obj.id)
     # curr_time = datetime.datetime.now()
 
@@ -464,7 +474,6 @@ def ping(request):
         curr_time = dictfetchall(cursor)
         context['data']['curr_time'] = curr_time[0]['time']
 
-
         cursor.execute("""SELECT SpotMe_student.*, SpotMe_takes.*, SpotMe_lecture.* 
             FROM SpotMe_takes, SpotMe_student, 
             SpotMe_lecture, SpotMe_course_session WHERE 
@@ -482,7 +491,29 @@ def ping(request):
             context['data']['curr_lecture'] = row[0]
             print(row[0]['lecture_id'])
 
+<<<<<<< HEAD
             student_location = get_location(request)
+=======
+            # MARK ATTENDANCE....
+            cursor.execute("""select * from SpotMe_attendance WHERE
+                lecture_id = %s AND student_id = %s""", [row[0]['lecture_id'] , student_obj.id])
+            attendance_data = dictfetchall(cursor)
+            # print(attendance_data)
+            if(not(len(attendance_data) == 1)):
+                lecture_id = row[0]['lecture_id']
+                new_attendance = attendance(lecture_id = lecture_id, student_id =  student_obj.id)
+                new_attendance.save()
+            cursor.execute("""select * from SpotMe_attendance WHERE
+                lecture_id = %s AND student_id = %s""", [row[0]['lecture_id'] , student_obj.id])
+            attendance_data = dictfetchall(cursor)
+            data=request.POST['wifi-data']
+            data = json.loads(data)
+            student_location = get_location(data)
+            # print(attendance_data[0]['id'])
+            # print(json.dumps(student_location))
+            new_tracking_data = tracking_data(attendance_id = attendance_data[0]['id'], location=student_location)
+            new_tracking_data.save()
+>>>>>>> b0916a7eb9880b9fe0ac8529bb232961e8983919
 
             if(student_location == row[0]['lecture_location_id']):
             # MARK ATTENDANCE....
@@ -511,11 +542,46 @@ def ping(request):
 
     return JsonResponse(context)
 
-@csrf_exempt
-def get_location(request):
+def get_prob(loc, data):
+    prob = 0
+    wts = epsilon
+    for (router_obj, signal) in data:
+        try:
+            stat = get_object_or_404(router_location_statistic, location=loc, router=router_obj)
+            p = exp(-(stat.avg - signal)**2/(stat.var+epsilon))
+            wt = exp(-(stat.Max - stat.avg)**2/(stat.var+epsilon))
+            prob += p*wt
+            wts += wt
+        except:
+            pass
+    return (loc, prob/wts)
+
+def get_location(data):
     context = {'status': False}
-    context['location'] = 1 
-    return context['location']
+    context['location'] = get_object_or_404(location, location_id=1)
+    id_signal_data = []
+    for d in data:
+        try:
+            r = get_object_or_404(router, BSSID=d['bssid'])
+            id_signal_data.append((r, d['signal']))
+        except:
+            pass
+    print(id_signal_data)
+    locations = location.objects.all()
+    probs = []
+    max_prob = 0
+    out_loc = None
+    for l in locations:
+        p = get_prob(l, id_signal_data)
+        print('loc-prob', p)
+        if p[1] > max_prob:
+            max_prob = p[1]
+            out_loc = p[0]
+    if out_loc:
+        context['ststus'] = True
+        context['location'] = out_loc
+        return context
+    return context
 
 @csrf_exempt
 def location_data(request):

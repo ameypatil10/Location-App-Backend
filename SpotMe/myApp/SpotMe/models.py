@@ -82,16 +82,17 @@ class location(models.Model):
         return self.location_name
 
 class lecture(models.Model):
-    lecture_id = models.AutoField(primary_key=True, default=1)
+    lecture_id = models.AutoField(primary_key=True)
     lecture_title = models.CharField(max_length=50, default=None, null=True)
     course_session = models.ForeignKey(course_session, on_delete=models.CASCADE)
     lecture_location = models.ForeignKey(location, on_delete=models.CASCADE)
 
-    start_time = models.DateTimeField()
-    end_time = models.DateTimeField()
+    lecture_date = models.DateField()
+    start_time = models.TimeField()
+    end_time = models.TimeField()
 
     def __str__(self):
-        return self.course_session.course.course_name + ' - Lecture: ' + str(self.lecture_id)
+        return self.course_session.course.course_name + ' - Lecture: ' + str(self.lecture_title)
 
 class router(models.Model):
     BSSID = models.CharField(primary_key=True,max_length=20, default='')
