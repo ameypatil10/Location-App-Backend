@@ -6,6 +6,15 @@
 <h1>
     {{ lecture }}
 </h1>
+
+    {% if students %}
+
+        {% for student in students %}
+            <h3>{{ student }}</h3>
+        {% endfor %}
+
+    {% endif %}
+
 {% endif %}
 
 {% endblock %}

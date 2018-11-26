@@ -48,7 +48,7 @@ def instructor_course_page_context(instructor, course_session_id):
     return context
 
 def instructor_lecture_page_context(instructor, lecture_id):
-    context = {'instructor': None, 'course_session': None, 'lecture': None}
+    context = {'instructor': None, 'course_session': None, 'students': None, 'lecture': None}
     if instructor is not None:
         if instructor.user.is_authenticated:
             context['instructor'] = instructor
@@ -56,7 +56,13 @@ def instructor_lecture_page_context(instructor, lecture_id):
             if lecture_obj is not None:
                 context['course_session'] = lecture.course_session
                 context['lecture'] = lecture_obj
+                takes_objs = takes.objects.filter(course_session=lecture_obj.course_session)
+                context['students'] = list(map(lambda x: x.student, takes_objs))
+                context['attendances'] = attendance.objects.filter(lecture=lecture_obj)
     return context
+
+def get_location1():
+    pass
 
 ############################################################ Instructor VIEWS ####################################################################
 def index(request):
@@ -194,6 +200,7 @@ def instructor_lecture_page(request, lecture_id):
         instructor_obj = get_object_or_404(instructor, user=request.user)
         context = instructor_lecture_page_context(instructor_obj, lecture_id)
         return render(request, 'SpotMe/instructor_lecture_page.html', context)
+
 
 ###################################################### Student Views #################################################################################
 
@@ -434,7 +441,7 @@ def ping(request):
 
     user = request.user
     print(user)
-    student_obj = student.objects.get(user=user) 
+    student_obj = get_object_or_404(student, user=user) 
     print(student_obj.id)
     # curr_time = datetime.datetime.now()
 
@@ -458,7 +465,6 @@ def ping(request):
         cursor.execute("SELECT DATETIME('NOW') as time")
         curr_time = dictfetchall(cursor)
         context['data']['curr_time'] = curr_time[0]['time']
-
 
         cursor.execute("""SELECT SpotMe_student.*, SpotMe_takes.*, SpotMe_lecture.* 
             FROM SpotMe_takes, SpotMe_student, 
@@ -493,7 +499,7 @@ def ping(request):
             student_location = get_location(request)
             # print(attendance_data[0]['id'])
             # print(json.dumps(student_location))
-            new_tracking_data = tracking_data(attendance_id = attendance_data[0]['id'], location_id = student_location)
+            new_tracking_data = tracking_data(attendance_id = attendance_data[0]['id'], location=student_location)
             new_tracking_data.save()
 
             context['data']['msg'] = "new tracking_data added"
@@ -507,7 +513,8 @@ def ping(request):
 @csrf_exempt
 def get_location(request):
     context = {'status': False}
-    context['location'] = 1 
+    data = request.POST['wifi-data']
+    context['location'] = get_object_or_404(location, location_id=1)
     return context['location']
 
 @csrf_exempt
