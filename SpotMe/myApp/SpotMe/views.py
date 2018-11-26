@@ -358,11 +358,16 @@ def student_profile(request):
         return JsonResponse(context)
     else:
         user = request.user
-        student_obj = get_object_or_404(student, user=user)
+        # with connection.cursor() as cursor:
+        # cursor.execute("""SELECT * from SpotMe_student, auth_user 
+            # WHERE auth_user.id = SpotMe_student.id AND auth_user.id = %s""", [user.id])
+
+        # profile = dictfetchall(cursor)
         context['status'] = True
-        context['userid'] = user.username
-        context['student'] = list(student_obj.values())
-        print(context['course_sessions'])
+        context['username'] = user.username
+        context['email'] = user.email
+            # context['data'] = profile[0]
+        # print(context['course_sessions'])
         return JsonResponse(context)
 
 
@@ -426,9 +431,10 @@ def Wifi_data(request):
 
 @csrf_exempt
 def ping(request):
-    context = {'status': False}
+    context = {'status': False, 'logged_in': True}
     if not request.user or not request.user.is_authenticated:
         context['error_msg'] = 'User not logged in'
+        context['logged_in'] = False
         return JsonResponse(context) 
 
     user = request.user
@@ -476,26 +482,28 @@ def ping(request):
             context['data']['curr_lecture'] = row[0]
             print(row[0]['lecture_id'])
 
-            # MARK ATTENDANCE....
-            cursor.execute("""select * from SpotMe_attendance WHERE
-                lecture_id = %s AND student_id = %s""", [row[0]['lecture_id'] , student_obj.id])
-            attendance_data = dictfetchall(cursor)
-            # print(attendance_data)
-            if(not(len(attendance_data) == 1)):
-                lecture_id = row[0]['lecture_id']
-                new_attendance = attendance(lecture_id = lecture_id, student_id =  student_obj.id)
-                new_attendance.save()
-            cursor.execute("""select * from SpotMe_attendance WHERE
-                lecture_id = %s AND student_id = %s""", [row[0]['lecture_id'] , student_obj.id])
-            attendance_data = dictfetchall(cursor)
-
             student_location = get_location(request)
-            # print(attendance_data[0]['id'])
-            # print(json.dumps(student_location))
-            new_tracking_data = tracking_data(attendance_id = attendance_data[0]['id'], location_id = student_location)
-            new_tracking_data.save()
 
-            context['data']['msg'] = "new tracking_data added"
+            if(student_location == row[0]['lecture_location_id']):
+            # MARK ATTENDANCE....
+                cursor.execute("""select * from SpotMe_attendance WHERE
+                    lecture_id = %s AND student_id = %s""", [row[0]['lecture_id'] , student_obj.id])
+                attendance_data = dictfetchall(cursor)
+                # print(attendance_data)
+                if(not(len(attendance_data) == 1)):
+                    lecture_id = row[0]['lecture_id']
+                    new_attendance = attendance(lecture_id = lecture_id, student_id =  student_obj.id)
+                    new_attendance.save()
+                cursor.execute("""select * from SpotMe_attendance WHERE
+                    lecture_id = %s AND student_id = %s""", [row[0]['lecture_id'] , student_obj.id])
+                attendance_data = dictfetchall(cursor)
+
+                # print(attendance_data[0]['id'])
+                # print(json.dumps(student_location))
+                new_tracking_data = tracking_data(attendance_id = attendance_data[0]['id'], location_id = student_location)
+                new_tracking_data.save()
+
+                context['data']['msg'] = "new tracking_data added"
 
         context['status'] = True
         context['userid'] = user.username
@@ -550,3 +558,5 @@ def location_data(request):
         print(location_obj.location_id, location_obj.location_name, router_obj.SSID, router_obj.BSSID, d['signal'])
         context = {'status': True}
     return JsonResponse(context)
+
+
