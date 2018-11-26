@@ -58,6 +58,8 @@ class course_session(models.Model):
     semester = models.CharField(max_length=10, choices=SEM_CHOICES)
     year = models.IntegerField(choices=YEAR_CHOICES)
 
+    attendance_time = models.IntegerField(default=15)
+
     class Meta:
         unique_together = ('session_token', 'course')
 
@@ -130,9 +132,10 @@ class attendance(models.Model):
     student = models.ForeignKey(student, on_delete=models.CASCADE)
     lecture = models.ForeignKey(lecture, on_delete=models.CASCADE)
     attendance_time = models.DateTimeField(default=datetime.datetime.now)
+    attendance_flag = models.IntegerField(default = 0)
 
     def __str__(self):
-        return self.student.user.username + ' ' + self.lecture.id
+        return self.student.user.username + ' ' + str(self.lecture.lecture_id)
 
 class tracking_data(models.Model):
     attendance = models.ForeignKey(attendance, on_delete=models.CASCADE)
@@ -140,4 +143,4 @@ class tracking_data(models.Model):
     location = models.ForeignKey(location, on_delete=models.CASCADE)
 
     def __str__(self):
-        return self.timestamp + ' - ' + self.attendance.id + ', ' + self.location.id
+        return str(self.timestamp) + ' - ' + str(self.attendance.id) + ', ' + str(self.location.location_id)
