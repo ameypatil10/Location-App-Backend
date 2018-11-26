@@ -268,6 +268,7 @@ def student_home(request):
         return JsonResponse(context)
     else:
         user = request.user
+        print(user)
         student_obj = student.objects.get(user=user) 
         # print(student_obj.id)
 
@@ -431,14 +432,83 @@ def ping(request):
         context['error_msg'] = 'User not logged in'
         return JsonResponse(context) 
 
-    context['data'] = request.POST
-    context['status'] = True
+    user = request.user
+    print(user)
+    student_obj = student.objects.get(user=user) 
+    print(student_obj.id)
+    # curr_time = datetime.datetime.now()
+
+    with connection.cursor() as cursor:
+        cursor.execute("""SELECT SpotMe_student.*, SpotMe_takes.*, SpotMe_lecture.* 
+            FROM SpotMe_takes, SpotMe_student, 
+            SpotMe_lecture, SpotMe_course_session WHERE 
+            SpotMe_takes.student_id = SpotMe_student.id 
+            AND SpotMe_course_session.id = SpotMe_takes.course_session_id 
+            AND SpotMe_lecture.course_session_id = SpotMe_course_session.id
+            AND SpotMe_student.id = %s
+            AND SpotMe_lecture.start_time > DATETIME('NOW')""", [student_obj.id])
+
+        next_lect = dictfetchall(cursor)
+        context['data'] = {}
+        if(len(next_lect) == 0):
+            context['data']['next_lecture'] = "No Lecture Found"
+        else:
+            context['data']['next_lecture'] = next_lect[0]
+
+        cursor.execute("SELECT DATETIME('NOW') as time")
+        curr_time = dictfetchall(cursor)
+        context['data']['curr_time'] = curr_time[0]['time']
+
+
+        cursor.execute("""SELECT SpotMe_student.*, SpotMe_takes.*, SpotMe_lecture.* 
+            FROM SpotMe_takes, SpotMe_student, 
+            SpotMe_lecture, SpotMe_course_session WHERE 
+            SpotMe_takes.student_id = SpotMe_student.id 
+            AND SpotMe_course_session.id = SpotMe_takes.course_session_id 
+            AND SpotMe_lecture.course_session_id = SpotMe_course_session.id
+            AND SpotMe_student.id = %s
+            AND SpotMe_lecture.start_time < DATETIME('NOW')
+            AND SpotMe_lecture.end_time > DATETIME('NOW')""", [student_obj.id])
+        # cursor.execute("select DATETIME('now')")
+        row = dictfetchall(cursor)
+        if(len(row) == 0):
+            context['data']['curr_lecture'] = "No Lecture Found"
+        else:
+            context['data']['curr_lecture'] = row[0]
+            print(row[0]['lecture_id'])
+
+            # MARK ATTENDANCE....
+            cursor.execute("""select * from SpotMe_attendance WHERE
+                lecture_id = %s AND student_id = %s""", [row[0]['lecture_id'] , student_obj.id])
+            attendance_data = dictfetchall(cursor)
+            # print(attendance_data)
+            if(not(len(attendance_data) == 1)):
+                lecture_id = row[0]['lecture_id']
+                new_attendance = attendance(lecture_id = lecture_id, student_id =  student_obj.id)
+                new_attendance.save()
+            cursor.execute("""select * from SpotMe_attendance WHERE
+                lecture_id = %s AND student_id = %s""", [row[0]['lecture_id'] , student_obj.id])
+            attendance_data = dictfetchall(cursor)
+
+            student_location = get_location(request)
+            # print(attendance_data[0]['id'])
+            # print(json.dumps(student_location))
+            new_tracking_data = tracking_data(attendance_id = attendance_data[0]['id'], location_id = student_location)
+            new_tracking_data.save()
+
+            context['data']['msg'] = "new tracking_data added"
+
+        context['status'] = True
+        context['userid'] = user.username
+        return JsonResponse(context)
+
     return JsonResponse(context)
 
 @csrf_exempt
 def get_location(request):
     context = {'status': False}
-    return JsonResponse(context)
+    context['location'] = 1 
+    return context['location']
 
 @csrf_exempt
 def location_data(request):
