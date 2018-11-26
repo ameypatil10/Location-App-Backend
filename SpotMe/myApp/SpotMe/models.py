@@ -58,6 +58,9 @@ class course_session(models.Model):
     semester = models.CharField(max_length=10, choices=SEM_CHOICES)
     year = models.IntegerField(choices=YEAR_CHOICES)
 
+    class Meta:
+        unique_together = ('session_token', 'course')
+
     def __str__(self):
         return self.semester + ' ' + str(self.year) + ': ' + str(self.course)
 
@@ -95,15 +98,21 @@ class router(models.Model):
     SSID = models.CharField(max_length=40)
 
     def __str__(self):
-        return self.BSSID + self.SSID
+        return self.BSSID + '  ' + self.SSID + '  ' + self.BSSID
 
 class router_location_statistic(models.Model):
     location = models.ForeignKey(location, on_delete=models.CASCADE)
     router = models.ForeignKey(router, on_delete=models.CASCADE)
-    num = models.FloatField() # avg, var, min, max
-    avg = models.FloatField() # avg, var, min, max
-    var = models.FloatField() # avg, var, min, max
-    Max = models.FloatField() # avg, var, min, max
+    num = models.IntegerField(default=0) # avg, var, min, max
+    avg = models.FloatField(default=0) # avg, var, min, max
+    var = models.FloatField(default=0) # avg, var, min, max
+    Max = models.FloatField(default=-100000) # avg, var, min, max
+    
+    class Meta:
+        unique_together = ('location', 'router')
+
+    def __str__(self):
+        return  self.router.BSSID +  '  ' + self.location.location_name + '  ' + self.router.SSID + '  ' + str(self.avg)
 
 class router_location_data(models.Model):
     location = models.ForeignKey(location, on_delete=models.CASCADE)
