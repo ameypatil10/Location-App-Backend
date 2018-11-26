@@ -63,9 +63,6 @@ def instructor_lecture_page_context(instructor, lecture_id):
                 context['attendances'] = attendance.objects.filter(lecture=lecture_obj)
     return context
 
-def get_location1():
-    pass
-
 ############################################################ Instructor VIEWS ####################################################################
 def index(request):
     if request.user.is_authenticated:
@@ -490,8 +487,9 @@ def ping(request):
         else:
             context['data']['curr_lecture'] = row[0]
             print(row[0]['lecture_id'])
-
-            student_location = get_location(request)
+            data = request.POST['wifi-data']
+            data = json.loads(data)
+            student_location = get_location(data)
 
             if(student_location == row[0]['lecture_location_id']):
             # MARK ATTENDANCE....
