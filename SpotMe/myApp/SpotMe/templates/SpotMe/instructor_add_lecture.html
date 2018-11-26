@@ -22,11 +22,14 @@
                 {% endif %}
             </select>
             {{ form.errors.location_id }}
+            <p>Date</p>
+            <input type="date" name="lecture_date" />
+            {{ form.errors.lecture_date }}
             <p>Start Time</p>
-            <input type="datetime" name="start_time" />
+            <input type="time" name="start_time" />
             {{ form.errors.start_time }}
             <p>End Time</p>
-            <input type="datetime" name="end_time" />
+            <input type="time" name="end_time" />
             {{ form.errors.end_time }}
         </fieldset>
         <button type="submit">Submit</button>

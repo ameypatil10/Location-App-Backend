@@ -169,11 +169,12 @@ def instructor_add_lecture(request, course_session_id):
         if form.is_valid():
             location_id = form.cleaned_data['location_id']
             lecture_title = form.cleaned_data['lecture_title']
+            lecture_date = form.cleaned_data['lecture_date']
             start_time = form.cleaned_data['start_time']
             end_time = form.cleaned_data['end_time']
             location_obj = get_object_or_404(location, location_id=location_id)
             lecture_obj = lecture(lecture_location=location_obj, course_session=course_session_obj, 
-            lecture_title=lecture_title, start_time=start_time, end_time=end_time)
+            lecture_title=lecture_title, lecture_date=lecture_date, start_time=start_time, end_time=end_time)
             lecture_obj.save()
             return render(request, 'SpotMe/instructor_course_page.html', instructor_course_page_context(instructor_obj, course_session_id))
         return render(request, 'SpotMe/instructor_add_lecture.html', context)

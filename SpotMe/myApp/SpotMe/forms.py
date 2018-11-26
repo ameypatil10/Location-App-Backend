@@ -52,9 +52,18 @@ class AddCourseSession(forms.ModelForm):
 class AddLecture(forms.ModelForm):
     location_id = forms.IntegerField()
     lecture_title = forms.CharField()    
-    start_time = forms.DateTimeField()
-    end_time = forms.DurationField()
+    lecture_date = forms.DateField()
+    start_time = forms.TimeField()
+    end_time = forms.TimeField()
 
     class Meta:
         model = lecture
-        fields = ['lecture_title', 'start_time', 'end_time']
+        fields = ['lecture_title', 'start_time', 'end_time', 'lecture_date']
+
+    def clean(self):
+        cleaned_data = super(AddLecture, self).clean()
+        start_time = cleaned_data.get("start_time")
+        end_time = cleaned_data.get("end_time")
+        if start_time > end_time:
+            self.add_error('end_time', "End time must be greater than start time")
+        return cleaned_data
