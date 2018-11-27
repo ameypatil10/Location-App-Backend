@@ -511,7 +511,7 @@ def ping(request):
     user = request.user
     student_obj = get_object_or_404(student, user=user) 
     student_location = get_location_in(request)
-    print('student_location - ', student_location)
+    print('student_location - ', request.user, student_location)
     with connection.cursor() as cursor:
         cursor.execute("""SELECT SpotMe_student.*, SpotMe_takes.*, SpotMe_lecture.* 
             FROM SpotMe_takes, SpotMe_student, 
@@ -677,7 +677,7 @@ def get_location_in(request):
     out_loc = None
     for l in locations:
         p = get_prob(l, id_signal_data)
-        # print(p)
+        print(p)
         probs.append(p)
         if p[1] > max_prob:
             max_prob = p[1]
