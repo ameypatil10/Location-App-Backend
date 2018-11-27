@@ -44,10 +44,13 @@ def instructor_course_page_context(instructor, course_session_id):
     if instructor is not None:
         if instructor.user.is_authenticated:
             context['instructor'] = instructor
-            course_session_obj = get_object_or_404(course_session, pk=course_session_id)
-            context['course_session'] = course_session_obj
-            if course_session_obj is not None:
-                context['course_lectures'] = lecture.objects.filter(course_session=course_session_obj)
+            try:
+                course_session_obj = get_object_or_404(course_session, pk=course_session_id)
+                context['course_session'] = course_session_obj
+                if course_session_obj is not None:
+                    context['course_lectures'] = lecture.objects.filter(course_session=course_session_obj)
+            except:
+                pass
     return context
 
 def instructor_lecture_page_context(instructor, lecture_id):
@@ -55,13 +58,11 @@ def instructor_lecture_page_context(instructor, lecture_id):
     if instructor is not None:
         if instructor.user.is_authenticated:
             context['instructor'] = instructor
-            lecture_obj = get_object_or_404(lecture, pk=lecture_id)
-            print(lecture_obj)
-            if lecture_obj is not None:
+            try:
+                lecture_obj = get_object_or_404(lecture, pk=lecture_id)
                 context['course_session'] = lecture.course_session
                 context['lecture'] = lecture_obj
                 takes_objs = takes.objects.filter(course_session=lecture_obj.course_session)
-                print(takes_objs)
                 students = list(map(lambda x: x.student, takes_objs))
                 context['students'] = students
                 for student_obj in students:
@@ -70,14 +71,18 @@ def instructor_lecture_page_context(instructor, lecture_id):
                     except:
                         att = attendance(student=student_obj, lecture=lecture_obj, attendance_time=None)
                         att.save()
-                print(context['students'])
                 context['attendances'] = attendance.objects.filter(lecture=lecture_obj)
+            except:
+                pass
     return context
 
 ############################################################ Instructor VIEWS ####################################################################
 def index(request):
     if request.user.is_authenticated:
-        instructor_obj = get_object_or_404(instructor, user=request.user)
+        try:
+            instructor_obj = get_object_or_404(instructor, user=request.user)
+        except:
+            instructor_obj = None
         return render(request, 'SpotMe/instructor_home.html', instructor_home_context(instructor_obj))
     else:
         return render(request, 'SpotMe/index.html')
@@ -134,7 +139,10 @@ def instructor_profile(request):
     if not request.user.is_authenticated:
         return render(request, 'SpotMe/instructor_login.html')
     else:
-        instructor_obj = get_object_or_404(instructor, user=request.user)
+        try:
+            instructor_obj = get_object_or_404(instructor, user=request.user)
+        except:
+            instructor_obj = None
         context = {'instructor': instructor_obj}
         return render(request, 'SpotMe/instructor_profile.html', context)
 
@@ -145,7 +153,10 @@ def instructor_home(request):
     if not request.user.is_authenticated:
         return render(request, 'SpotMe/instructor_login.html')
     else:
-        instructor_obj = get_object_or_404(instructor, user=request.user)
+        try:
+            instructor_obj = get_object_or_404(instructor, user=request.user)
+        except:
+            instructor_obj = None
         return render(request, 'SpotMe/instructor_home.html', instructor_home_context(instructor_obj))
 
 def instructor_add_course_session(request):
@@ -163,14 +174,20 @@ def instructor_add_course_session(request):
             year = form.cleaned_data['year']
             semester = form.cleaned_data['semester']
             course_session_info = form.cleaned_data['course_session_info']
-            course_obj = get_object_or_404(course, course_id=course_id)
-            form.course = course_obj
-            form.instructor = instructor_obj
-            session_token = get_random_string(10)
-            course_session_obj = course_session(course_instructor=instructor_obj, session_token=session_token,
-            course=course_obj, year=year, semester=semester, course_session_info=course_session_info)
-            course_session_obj.save()
-            return render(request, 'SpotMe/instructor_home.html', instructor_home_context(instructor_obj))
+            try:
+                course_obj = get_object_or_404(course, course_id=course_id)
+                form.course = course_obj
+                form.instructor = instructor_obj
+                session_token = get_random_string(10)
+                try:
+                    course_session_obj = course_session(course_instructor=instructor_obj, session_token=session_token,
+                    course=course_obj, year=year, semester=semester, course_session_info=course_session_info)
+                    course_session_obj.save()
+                except:
+                    print('Token value already exists.')
+                return render(request, 'SpotMe/instructor_home.html', instructor_home_context(instructor_obj))
+            except:
+                pass
         return render(request, 'SpotMe/instructor_add_course_session.html', context)
 
 def instructor_add_lecture(request, course_session_id):
@@ -188,10 +205,13 @@ def instructor_add_lecture(request, course_session_id):
             lecture_date = form.cleaned_data['lecture_date']
             start_time = form.cleaned_data['start_time']
             end_time = form.cleaned_data['end_time']
-            location_obj = get_object_or_404(location, location_id=location_id)
-            lecture_obj = lecture(lecture_location=location_obj, course_session=course_session_obj, 
-            lecture_title=lecture_title, lecture_date=lecture_date, start_time=start_time, end_time=end_time)
-            lecture_obj.save()
+            try:
+                location_obj = get_object_or_404(location, location_id=location_id)
+                lecture_obj = lecture(lecture_location=location_obj, course_session=course_session_obj, 
+                lecture_title=lecture_title, lecture_date=lecture_date, start_time=start_time, end_time=end_time)
+                lecture_obj.save()
+            except:
+                print('Error while saving the lecture instanse.')
             return render(request, 'SpotMe/instructor_course_page.html', instructor_course_page_context(instructor_obj, course_session_id))
         return render(request, 'SpotMe/instructor_add_lecture.html', context)
 
@@ -199,16 +219,22 @@ def instructor_course_page(request, course_session_id):
     if not request.user.is_authenticated:
         return render(request, 'SpotMe/instructor_login.html')
     else:
-        instructor_obj = get_object_or_404(instructor, user=request.user)
-        context = instructor_course_page_context(instructor_obj, course_session_id)
+        try:
+            instructor_obj = get_object_or_404(instructor, user=request.user)
+            context = instructor_course_page_context(instructor_obj, course_session_id)
+        except:
+            context = {}
         return render(request, 'SpotMe/instructor_course_page.html', context)
 
 def instructor_lecture_page(request, lecture_id):
     if not request.user.is_authenticated:
         return render(request, 'SpotMe/instructor_login.html')
     else:
-        instructor_obj = get_object_or_404(instructor, user=request.user)
-        context = instructor_lecture_page_context(instructor_obj, lecture_id)
+        try:
+            instructor_obj = get_object_or_404(instructor, user=request.user)
+            context = instructor_lecture_page_context(instructor_obj, lecture_id)
+        except:
+            context = {} 
         return render(request, 'SpotMe/instructor_lecture_page.html', context)
 
 def lecture_tracking_page(request, lecture_id, student_id):
@@ -216,15 +242,24 @@ def lecture_tracking_page(request, lecture_id, student_id):
     if not request.user.is_authenticated:
         return render(request, 'SpotMe/instructor_login.html')
     else:
-        instructor_obj = get_object_or_404(instructor, user=request.user)
-        context['instructor'] = instructor_obj
-        lecture_obj = get_object_or_404(lecture, lecture_id=lecture_id)
-        student_obj = get_object_or_404(student, pk=student_id)
-        context['student'] = student_obj
-        attendance_obj = get_object_or_404(attendance, student=student_obj, lecture=lecture_obj)
-        context['attendance'] = attendance_obj
-        context['tracking_data'] = tracking_data.objects.filter(attendance=attendance_obj)
-        print(context)
+        try:
+            instructor_obj = get_object_or_404(instructor, user=request.user)
+            context['instructor'] = instructor_obj
+            try:
+                lecture_obj = get_object_or_404(lecture, lecture_id=lecture_id)
+                student_obj = get_object_or_404(student, pk=student_id)
+                context['student'] = student_obj
+                try:
+                    attendance_obj = get_object_or_404(attendance, student=student_obj, lecture=lecture_obj)
+                    context['attendance'] = attendance_obj
+                    context['tracking_data'] = tracking_data.objects.filter(attendance=attendance_obj)
+                    return render(request, 'SpotMe/lecture_tracking_page.html', context)
+                except:
+                    pass
+            except:
+                pass
+        except:
+            pass
         return render(request, 'SpotMe/lecture_tracking_page.html', context)
 
 ###################################################### Student Views #################################################################################
@@ -258,13 +293,10 @@ def student_login(request):
 @csrf_exempt
 def student_logout(request):
     context = {'status': False}
-    print('out')
     if not request.user.is_authenticated:
-        print('not logged in')
         return JsonResponse(context)
     else:
         logout(request)
-        print('Done')
         context['status'] = True
     return JsonResponse(context)
 
@@ -306,7 +338,6 @@ def student_home(request):
         return JsonResponse(context)
     else:
         user = request.user
-        print(user)
         student_obj = student.objects.get(user=user) 
         # print(student_obj.id)
 
@@ -356,7 +387,7 @@ def student_course_details(request):
                 AND SpotMe_instructor.id =  SpotMe_course_session.course_instructor_id 
                 AND SpotMe_takes.id = %s""", [takes_id])
             row = dictfetchall(cursor)
-            print(row)
+            # print(row)
             context['data'] = row
             context['status'] = True
             context['userid'] = user.username
@@ -375,7 +406,7 @@ def student_register_course(request):
         if request.POST:
             course_id = request.POST['course_id']
             session_token = request.POST['session_token']
-            print(course_id, session_token)
+            # print(course_id, session_token)
             try:
                 course_obj = get_object_or_404(course, course_id=course_id)
                 course_session_obj = get_object_or_404(course_session, course=course_obj, session_token=session_token)
@@ -383,8 +414,7 @@ def student_register_course(request):
                 takes_obj.save()
             except Exception as e:
                 context['error_msg'] = str(e)
-                return JsonResponse(context)
-            print(takes_obj)
+                return JsonResponse(context)            
             # context['course_session'] = takes_obj.course_session
             # print(context['course_sessions'])
             context['status'] = True
@@ -472,7 +502,6 @@ def Wifi_data(request):
 
 @csrf_exempt
 def ping(request):
-    # print("hehjahejheajhej")
     context = {'status': False, 'logged_in': True}
     if not request.user or not request.user.is_authenticated:
         context['error_msg'] = 'User not logged in'
@@ -521,23 +550,19 @@ def ping(request):
         # cursor.execute("select DATETIME('now')")
         row = dictfetchall(cursor)
 
-        print('row: ', row)
         if(len(row) == 0):
             context['data']['curr_lecture'] = "No Lecture Found"
         else:
             context['data']['curr_lecture'] = row[0]
             student_location_dict = get_location_in(request)
             student_location = student_location_dict['location']
-            print(student_location)
-            print("Location")
-            print(student_location.location_id,row[0]['lecture_location_id'])
             if(student_location is not None and (student_location.location_id == row[0]['lecture_location_id'])):
             # MARK ATTENDANCE....
-                print("IN MARK ATTENDANCE")
+                # print("IN MARK ATTENDANCE")
                 cursor.execute("""select * from SpotMe_attendance WHERE
                     lecture_id = %s AND student_id = %s""", [row[0]['lecture_id'] , student_obj.id])
                 attendance_data = dictfetchall(cursor)
-                print(attendance_data)
+                # print(attendance_data)
                 if(not(len(attendance_data) == 1)):
                     lecture_id = row[0]['lecture_id']
                     # Logic for flags
@@ -555,8 +580,6 @@ def ping(request):
                     cursor.execute("""select * from SpotMe_attendance WHERE
                         lecture_id = %s AND student_id = %s""", [row[0]['lecture_id'] , student_obj.id])
                     attendance_data = dictfetchall(cursor)
-                    print(attendance_data[0]['id'])
-                    print(student_location)
                     new_tracking_data = tracking_data(attendance_id = attendance_data[0]['id'], location_id = student_location)
                     new_tracking_data.save()
                 elif attendance_data[0]['attendance_time'] is None or attendance_data[0]['attendance_flag'] == 0:    
@@ -625,7 +648,7 @@ def get_location(request):
     out_loc = None
     for l in locations:
         p = get_prob(l, id_signal_data)
-        print(p)
+        # print(p)
         probs.append(p)
         if p[1] > max_prob:
             max_prob = p[1]
@@ -703,7 +726,6 @@ def location_data(request):
         router_location_statistic_obj.avg = avg
         router_location_statistic_obj.var = var
         router_location_statistic_obj.save()
-        print(location_obj.location_id, location_obj.location_name, router_obj.SSID, router_obj.BSSID, d['signal'])
         context = {'status': True}
     return JsonResponse(context)
 
