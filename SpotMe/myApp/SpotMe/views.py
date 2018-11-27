@@ -345,16 +345,18 @@ def student_course_details(request):
         # student_obj = student.objects.get(user=user)
 
         with connection.cursor() as cursor:
-            cursor.execute("""SELECT *
+            cursor.execute("""SELECT SpotMe_lecture.*, SpotMe_location.location_name
                 FROM SpotMe_takes, auth_user, SpotMe_course_session,
-                SpotMe_instructor, SpotMe_course, SpotMe_lecture
+                SpotMe_instructor, SpotMe_course, SpotMe_lecture, SpotMe_location
                 WHERE auth_user.id = SpotMe_instructor.user_id
+                AND SpotMe_location.location_id = SpotMe_lecture.lecture_location_id
                 AND SpotMe_lecture.course_session_id = SpotMe_course_session.id 
                 AND SpotMe_takes.course_session_id = SpotMe_course_session.id 
                 AND SpotMe_course_session.course_id = SpotMe_course.id 
                 AND SpotMe_instructor.id =  SpotMe_course_session.course_instructor_id 
                 AND SpotMe_takes.id = %s""", [takes_id])
             row = dictfetchall(cursor)
+            print(row)
             context['data'] = row
             context['status'] = True
             context['userid'] = user.username
@@ -489,9 +491,9 @@ def ping(request):
             AND SpotMe_course_session.id = SpotMe_takes.course_session_id 
             AND SpotMe_lecture.course_session_id = SpotMe_course_session.id
             AND SpotMe_student.id = %s
-            AND SpotMe_lecture.lecture_date = DATE('NOW')
-            AND SpotMe_lecture.start_time < TIME('NOW','+10 minutes') 
-            AND SpotMe_lecture.start_time > TIME('NOW')""", [student_obj.id])
+            AND SpotMe_lecture.lecture_date = DATE('NOW', 'localtime')
+            AND SpotMe_lecture.start_time < TIME('NOW', 'localtime', '+10 minutes') 
+            AND SpotMe_lecture.start_time > TIME('NOW', 'localtime')""", [student_obj.id])
 
         next_lect = dictfetchall(cursor)
         context['data'] = {}
@@ -500,7 +502,7 @@ def ping(request):
         else:
             context['data']['next_lecture'] = next_lect[0]
 
-        cursor.execute("SELECT DATETIME('NOW') as time")
+        cursor.execute("SELECT DATETIME('NOW', 'localtime') as time")
         curr_time = dictfetchall(cursor)
         # print("curr_time ", curr_time)
         context['data']['curr_time'] = curr_time[0]['time']
@@ -513,13 +515,13 @@ def ping(request):
             AND SpotMe_course_session.id = SpotMe_takes.course_session_id 
             AND SpotMe_lecture.course_session_id = SpotMe_course_session.id
             AND SpotMe_student.id = %s
-            AND SpotMe_lecture.lecture_date = DATE('NOW')
-            AND SpotMe_lecture.start_time < TIME('NOW')
-            AND SpotMe_lecture.end_time > TIME('NOW')""", [student_obj.id])
+            AND SpotMe_lecture.lecture_date = DATE('NOW', 'localtime')
+            AND SpotMe_lecture.start_time < TIME('NOW', 'localtime')
+            AND SpotMe_lecture.end_time > TIME('NOW', 'localtime')""", [student_obj.id])
         # cursor.execute("select DATETIME('now')")
         row = dictfetchall(cursor)
 
-        print(row)
+        print('row: ', row)
         if(len(row) == 0):
             context['data']['curr_lecture'] = "No Lecture Found"
         else:
@@ -548,7 +550,7 @@ def ping(request):
                     #     '2018-11-26 19:49:02'
 
                     # print("hello", current_time - lecture_start)
-                    new_attendance = attendance(lecture_id = lecture_id, student_id = student_obj.id, attendance_flag = attend_flag, attendance_time=datetime.datetime.now)
+                    new_attendance = attendance(lecture_id = lecture_id, student_id = student_obj.id, attendance_flag = attend_flag, attendance_time=datetime.datetime.now())
                     new_attendance.save()
                     cursor.execute("""select * from SpotMe_attendance WHERE
                         lecture_id = %s AND student_id = %s""", [row[0]['lecture_id'] , student_obj.id])
