@@ -32,6 +32,7 @@ urlpatterns = [
     url(r'^add_course_session/$', views.instructor_add_course_session, name='instructor_add_course_session'),
     url(r'^lecture/(?P<lecture_id>[0-9]+)/$', views.instructor_lecture_page, name='instructor_lecture_page'),
     url(r'^add_lecture/(?P<course_session_id>[0-9]+)/$', views.instructor_add_lecture, name='instructor_add_lecture'),
+    url(r'^lecture_tracking_page/(?P<lecture_id>[0-9]+)/(?P<student_id>[0-9]+)/$', views.lecture_tracking_page, name='lecture_tracking_page'),
 
     # Student URLS 
     url(r'^sreg/$', views.student_register, name='student_register'),

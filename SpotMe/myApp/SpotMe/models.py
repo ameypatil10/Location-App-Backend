@@ -3,6 +3,12 @@ from datetime import datetime
 from django.contrib.auth.models import User
 import datetime
 
+ATT_CHOICES = (
+    (0, 0),
+    (1, 1),
+    (2, 2)
+)
+
 SEM_CHOICES = (
     ('FALL', 'Fall'),
     ('AUTUMN', 'Autumn'),
@@ -131,16 +137,21 @@ class router_location_data(models.Model):
 class attendance(models.Model):
     student = models.ForeignKey(student, on_delete=models.CASCADE)
     lecture = models.ForeignKey(lecture, on_delete=models.CASCADE)
-    attendance_time = models.DateTimeField(default=datetime.datetime.now)
-    attendance_flag = models.IntegerField(default = 0)
+    attendance_time = models.DateTimeField(default=datetime.datetime.now, null=True)
+    attendance_flag = models.IntegerField(default = 0, choices=ATT_CHOICES)
+
+    class Meta:
+        unique_together = ('student', 'lecture')
 
     def __str__(self):
         return self.student.user.username + ' ' + str(self.lecture.lecture_id)
 
 class tracking_data(models.Model):
     attendance = models.ForeignKey(attendance, on_delete=models.CASCADE)
-    timestamp = models.DateTimeField(default=datetime.datetime.now)
     location = models.ForeignKey(location, on_delete=models.CASCADE)
+    timestamp = models.DateTimeField(default=datetime.datetime.now)
 
     def __str__(self):
         return str(self.timestamp) + ' - ' + str(self.attendance.id) + ', ' + str(self.location.location_id)
+
+    

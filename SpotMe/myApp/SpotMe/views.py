@@ -62,7 +62,15 @@ def instructor_lecture_page_context(instructor, lecture_id):
                 context['lecture'] = lecture_obj
                 takes_objs = takes.objects.filter(course_session=lecture_obj.course_session)
                 print(takes_objs)
-                context['students'] = list(map(lambda x: x.student, takes_objs))
+                students = list(map(lambda x: x.student, takes_objs))
+                context['students'] = students
+                for student_obj in students:
+                    try:
+                        att = get_object_or_404(attendance, student=student_obj, lecture=lecture_obj)
+                    except:
+                        att = attendance(student=student_obj, lecture=lecture_obj, attendance_time=None)
+                        att.save()
+                print(context['students'])
                 context['attendances'] = attendance.objects.filter(lecture=lecture_obj)
     return context
 
@@ -203,6 +211,21 @@ def instructor_lecture_page(request, lecture_id):
         context = instructor_lecture_page_context(instructor_obj, lecture_id)
         return render(request, 'SpotMe/instructor_lecture_page.html', context)
 
+def lecture_tracking_page(request, lecture_id, student_id):
+    context = {'instructor': None, 'student': None, 'attendance': None, 'tracking_data': None}
+    if not request.user.is_authenticated:
+        return render(request, 'SpotMe/instructor_login.html')
+    else:
+        instructor_obj = get_object_or_404(instructor, user=request.user)
+        context['instructor'] = instructor_obj
+        lecture_obj = get_object_or_404(lecture, lecture_id=lecture_id)
+        student_obj = get_object_or_404(student, pk=student_id)
+        context['student'] = student_obj
+        attendance_obj = get_object_or_404(attendance, student=student_obj, lecture=lecture_obj)
+        context['attendance'] = attendance_obj
+        context['tracking_data'] = tracking_data.objects.filter(attendance=attendance_obj)
+        print(context)
+        return render(request, 'SpotMe/lecture_tracking_page.html', context)
 
 ###################################################### Student Views #################################################################################
 
@@ -249,24 +272,30 @@ def student_logout(request):
 def student_register(request):
     context = {'status': False}
     if(request.method == 'POST'):
-        userid = request.POST['userid']
-        password = request.POST['password']
-        first_name = request.POST['first_name']
-        last_name = request.POST['last_name']
-        email = request.POST['email']
-        user = User(username = userid, first_name=first_name, last_name=last_name, email=email)
-        user.set_password(password)
-        user.save()
-        student_obj = student.create(user=user)
-        student_obj.save()
-        user = authenticate(username=userid, password=password)
-        if user is not None:
-            if user.is_active:
-                login(request, user)
-                context['userid'] = user.username
-                context['status'] = True
-                return JsonResponse(context)
-        context['status'] = False
+        try:
+            userid = request.POST['userid']
+            password = request.POST['password']
+            first_name = request.POST['first_name']
+            last_name = request.POST['last_name']
+            email = request.POST['email']
+            try:
+                user = User(username = userid, first_name=first_name, last_name=last_name, email=email)
+                user.set_password(password)
+                user.save()
+                student_obj = student.create(user=user)
+                student_obj.save()
+                user = authenticate(username=userid, password=password)
+                if user is not None:
+                    if user.is_active:
+                        login(request, user)
+                        context['userid'] = user.username
+                        context['status'] = True
+                        return JsonResponse(context)
+                context['status'] = False
+            except:
+                context['error_msg'] = 'User already exists'
+        except:
+            context['error_msg'] = 'Connection problem'
         return JsonResponse(context)
 
 @csrf_exempt
@@ -441,9 +470,8 @@ def Wifi_data(request):
 
 @csrf_exempt
 def ping(request):
+    # print("hehjahejheajhej")
     context = {'status': False, 'logged_in': True}
-    data = request.POST['wifi-data']
-    data = json.loads(data)
     if not request.user or not request.user.is_authenticated:
         context['error_msg'] = 'User not logged in'
         context['logged_in'] = False
@@ -451,7 +479,7 @@ def ping(request):
 
     user = request.user
     student_obj = get_object_or_404(student, user=user) 
-    student_location = get_location(data)
+    student_location = get_location_in(request)
     print('student_location - ', student_location)
     with connection.cursor() as cursor:
         cursor.execute("""SELECT SpotMe_student.*, SpotMe_takes.*, SpotMe_lecture.* 
@@ -474,6 +502,7 @@ def ping(request):
 
         cursor.execute("SELECT DATETIME('NOW') as time")
         curr_time = dictfetchall(cursor)
+        # print("curr_time ", curr_time)
         context['data']['curr_time'] = curr_time[0]['time']
 
         cursor.execute("""SELECT SpotMe_student.*, SpotMe_takes.*, 
@@ -489,22 +518,26 @@ def ping(request):
             AND SpotMe_lecture.end_time > TIME('NOW')""", [student_obj.id])
         # cursor.execute("select DATETIME('now')")
         row = dictfetchall(cursor)
+
+        print(row)
         if(len(row) == 0):
             context['data']['curr_lecture'] = "No Lecture Found"
         else:
             context['data']['curr_lecture'] = row[0]
-            student_location_dict = get_location(data)
+            student_location_dict = get_location_in(request)
             student_location = student_location_dict['location']
-
-            if((student_location.id == row[0]['lecture_location_id'])):
+            print(student_location)
+            print("Location")
+            print(student_location.location_id,row[0]['lecture_location_id'])
+            if(student_location is not None and (student_location.location_id == row[0]['lecture_location_id'])):
             # MARK ATTENDANCE....
+                print("IN MARK ATTENDANCE")
                 cursor.execute("""select * from SpotMe_attendance WHERE
                     lecture_id = %s AND student_id = %s""", [row[0]['lecture_id'] , student_obj.id])
                 attendance_data = dictfetchall(cursor)
-                # print(attendance_data)
+                print(attendance_data)
                 if(not(len(attendance_data) == 1)):
                     lecture_id = row[0]['lecture_id']
-
                     # Logic for flags
                     attend_flag = 1
                     # context['data']['curr_time']
@@ -515,10 +548,7 @@ def ping(request):
                     #     '2018-11-26 19:49:02'
 
                     # print("hello", current_time - lecture_start)
-
-
-
-                    new_attendance = attendance(lecture_id = lecture_id, student_id = student_obj.id, attendance_flag = attend_flag)
+                    new_attendance = attendance(lecture_id = lecture_id, student_id = student_obj.id, attendance_flag = attend_flag, attendance_time=datetime.datetime.now)
                     new_attendance.save()
                     cursor.execute("""select * from SpotMe_attendance WHERE
                         lecture_id = %s AND student_id = %s""", [row[0]['lecture_id'] , student_obj.id])
@@ -527,24 +557,26 @@ def ping(request):
                     print(student_location)
                     new_tracking_data = tracking_data(attendance_id = attendance_data[0]['id'], location_id = student_location)
                     new_tracking_data.save()
-                else:
+                elif attendance_data[0]['attendance_time'] is None or attendance_data[0]['attendance_flag'] == 0:    
+                    attendance_obj = get_object_or_404(attendance, lecture_id = row[0]['lecture_id'], student_id = student_obj.id)
+                    attendance_obj.attendance_time = datetime.datetime.now()
+                    attendance_obj.attendance_flag = 1
+                    attendance_obj.save()
+                    # attendance_obj.update(attendance_time = datetime.datetime.now, attendance_flag = 1)
+                else:  
                     cursor.execute("""select * from SpotMe_attendance WHERE
                         lecture_id = %s AND student_id = %s""", [row[0]['lecture_id'] , student_obj.id])
                     attendance_data = dictfetchall(cursor)
                     cursor.execute("""SELECT * FROM SpotMe_tracking_data WHERE
                         attendance_id = %s AND location_id = %s
-                        AND timestamp > DATETIME('NOW', '-5 minutes')""", [attendance_data[0]['id'], student_location])
+                        AND timestamp > DATETIME('NOW', '-1 minutes')""", [attendance_data[0]['id'], student_location.location_id])
                     tracking_data1 = dictfetchall(cursor)
                     if(len(tracking_data1) == 0):
-                        new_tracking_data = tracking_data(attendance_id = attendance_data[0]['id'], location_id = student_location)
+                        new_tracking_data = tracking_data(attendance_id = attendance_data[0]['id'], location_id = student_location.location_id)
                         new_tracking_data.save()
                         context['data']['msg'] = "new tracking_data added"
                     else:
                         context['data']['msg'] = "no tracking_data added"
-
-
-
-
                 # print(attendance_data[0]['id'])
                 # print(json.dumps(student_location))
 
@@ -573,8 +605,11 @@ def get_prob(loc, data):
             pass
     return (loc, prob/wts)
 
-def get_location(data):
-    context = {'status': False, 'location': None}
+@csrf_exempt
+def get_location(request):
+    context = {'status': False, 'location': None, 'loc_prob': 0}
+    data = request.POST['wifi-data']
+    data = json.loads(data)
     id_signal_data = []
     for d in data:
         try:
@@ -593,11 +628,39 @@ def get_location(data):
         if p[1] > max_prob:
             max_prob = p[1]
             out_loc = p[0]
-    if out_loc and max_prob > 0.01:
+    if out_loc and max_prob > 0.00000001:
+        context['status'] = True
+        context['location_name'] = out_loc.location_name
+        context['loc_prob'] = max_prob
+    return JsonResponse(context)
+
+@csrf_exempt
+def get_location_in(request):
+    context = {'status': False, 'location_name': None}
+    data = request.POST['wifi-data']
+    data = json.loads(data)
+    id_signal_data = []
+    for d in data:
+        try:
+            r = get_object_or_404(router, BSSID=d['bssid'])
+            id_signal_data.append((r, d['signal']))
+        except:
+            pass
+    locations = location.objects.all()
+    probs = []
+    max_prob = 0
+    out_loc = None
+    for l in locations:
+        p = get_prob(l, id_signal_data)
+        # print(p)
+        probs.append(p)
+        if p[1] > max_prob:
+            max_prob = p[1]
+            out_loc = p[0]
+    if out_loc and max_prob > 0.00000001:
         context['status'] = True
         context['location'] = out_loc
         context['loc_prob'] = max_prob
-        return context
     return context
 
 @csrf_exempt

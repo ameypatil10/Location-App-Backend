@@ -6,12 +6,59 @@
 <h1>
     {{ lecture }}
 </h1>
+    <div class="container">
+            <h2>Student Attendances</h2>
+            <table class="table table-hover table-bordered">
+              <thead>
+                <tr>
+                  <th>Username</th>
+                  <th>Student Name</th>
+                  <th>Timestamp</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% if attendances %}  
+                    {% for att in attendances %}   
+                        {% if att.attendance_flag == 1 %}
+                            <tr class="clickable-row success" data-href={% url 'SpotMe:lecture_tracking_page' lecture_id=att.lecture.lecture_id student_id=att.student.id %}>
+                                <td>{{ att.student.user.username }}</td>
+                                <td>{{ att.student.user.first_name }} {{ att.student.user.last_name }}</td>
+                                <td>{{ att.attendance_time }}</td>
+                            </tr>
+                        {% elif att.attendance_flag == 0 %}
+                            <tr class="clickable-row danger" data-href={% url 'SpotMe:lecture_tracking_page' lecture_id=att.lecture.lecture_id student_id=att.student.id %}>
+                                    <td>{{ att.student.user.username }}</td>
+                                <td>{{ att.student.user.first_name }} {{ att.student.user.last_name }}</td>
+                                <td>{{ att.attendance_time }}</td>
+                            </tr>
 
-    {% if students %}
-        {% for student in students %}
-            <h3>{{ student }}</h3>
-        {% endfor %}
-    {% endif %}
+                        {% elif att.attendance_flag == 2 %}
+                            <tr class="clickable-row warning" data-href={% url 'SpotMe:lecture_tracking_page' lecture_id=att.lecture.lecture_id student_id=att.student.id %}>
+                                    <td>{{ att.student.user.username }}</td>
+                                <td>{{ att.student.user.first_name }} {{ att.student.user.last_name }}</td>
+                                <td>{{ att.attendance_time }}</td>
+                            </tr>
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+              </tbody>
+            </table>
+          </div>
+          <!-- <tr class="info">
+                <td>Info</td>
+                <td>Dooley</td>
+                <td>july@example.com</td>
+              </tr>
+              <tr class="warning">
+                <td>Warning</td>
+                <td>Refs</td>
+                <td>bo@example.com</td>
+              </tr>
+              <tr class="active">
+                <td>Active</td>
+                <td>Activeson</td>
+                <td>act@example.com</td>
+              </tr> -->
 
 {% endif %}
 

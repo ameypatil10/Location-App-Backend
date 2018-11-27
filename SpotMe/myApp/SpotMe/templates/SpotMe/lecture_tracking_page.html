@@ -1,0 +1,35 @@
+{% extends 'SpotMe/instructor_in_base.html' %}
+
+{% block content %}
+
+{% if attendance %}
+<h2>
+    Lecture -  {{ attendance.lecture.lecture_title }} 
+</h2>
+<h4>
+    Student - {{ attendance.student.user.username }}
+</h4>
+{% endif %}
+<div class="container">
+        <p>Student Tracking Data</p>
+        <table class="table table-hover table-bordered">
+          <thead>
+            <tr>
+              <th>Location</th>
+              <th>Timestamp</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if tracking_data %}
+                {% for tr in tracking_data %}
+                    <tr class="info">
+                        <td>{{ tr.location.location_name }}</td>
+                        <td>{{ tr.timestamp }}</td>
+                    </tr>
+                {% endfor %}
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}
